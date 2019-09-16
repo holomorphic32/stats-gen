@@ -1,0 +1,105 @@
+---
+title: "Monty Hall, Generalized"
+author: "Douglas Callahan"
+classoption: 'landscape'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE}
+
+montyHallSim <- function( numSims = 10000, numCurtains = 3) {
+
+  firstStrategyWins = 0
+  secondStrategyWins = 0
+  firstStrategy <- rep(0, numSims)
+  secondStrategy <- rep(0, numSims)
+  
+  for (i in 1:numSims) { 
+    
+    curtains = seq(1, numCurtains)
+    
+    prize = sample(curtains, 1, replace = TRUE)
+    guess = sample(curtains, 1, replace = TRUE)
+  
+    montyOptions = curtains[ (curtains != prize) & (curtains != guess) ]
+    if ( length(montyOptions) == 1 ) {
+      montyChoice = montyOptions
+    }
+    else {
+      montyChoice = sample(x = montyOptions, size = 1)
+    }
+    
+    if ( numCurtains == 3) {
+      secondStratChoice = curtains[ (curtains != montyChoice) &  
+                                          (curtains != guess) ]
+    }
+    else {
+      secondStratChoice = sample(curtains[ (curtains != montyChoice) &  
+                                          (curtains != guess) ], 1)
+    }
+    
+    if (prize == guess) {
+      firstStrategyWins = firstStrategyWins + 1
+    }
+    firstStrategy[i] = firstStrategyWins/i
+      
+    if (prize == secondStratChoice) {
+      secondStrategyWins = secondStrategyWins + 1
+    }
+    secondStrategy[i] = secondStrategyWins/i
+
+  }
+  
+  
+  df <- data.frame( gamesPlayed = rep(seq(1, numSims), 2), 
+                    successRate = c(firstStrategy, secondStrategy),
+                    Strategy = c(rep("Never Switch", numSims), 
+                                 rep('Always Switch', numSims) ))
+  
+  p <- 
+    ggplot(df, aes(x = gamesPlayed, y = successRate, color = Strategy)) + 
+    geom_line() + 
+    xlab('Games Played') + 
+    ylab('Success Rate') + 
+    ggtitle("Long-term Success Rates for Different Monty-Hall Strategies")
+
+  print(p)
+    
+    print(paste("Predicted long-term success rate for first strategy:", 1/numCurtains ))
+  print(paste("Simulated long-term success rate for first strategy:", df$successRate[numSims]) )
+  
+  print(paste("Predicted long-term success rate for second strategy:", (1/numCurtains) * (numCurtains-1)/(numCurtains-2) ) )
+  print(paste("Simulated long-term success rate for second strategy:", df$successRate[2*numSims]) )
+
+}
+```
+
+
+## Monty Hall with 3 Curtains
+```{r, results = 'asis'}
+
+set.seed(1)
+montyHallSim(100000, 3)
+
+```
+
+## Monty Hall with 5 Curtains
+```{r, results = 'asis'}
+
+set.seed(1)
+montyHallSim(100000, 5)
+
+```
+
+## Monty Hall with 10 Curtains
+```{r, results = 'asis'}
+
+set.seed(1)
+montyHallSim(100000, 10)
+
+```
